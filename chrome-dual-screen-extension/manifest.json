@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Dual Screen Linker",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "minimum_chrome_version": "102",
   "description": "Enable dual-screen communication and window management for web applications.",
   "permissions": [
     "system.display",

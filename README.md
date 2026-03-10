@@ -9,7 +9,16 @@
 3.  **跨窗口通信 (Cross-Window Messaging)**: 提供简单的广播机制，实现主控屏与展示屏之间的数据同步。
 4.  **SDK 支持**: 提供 `DualScreenSDK.js`，方便 Vue/React/Angular 等前端项目快速接入。
 
-## 🚀 安装指南
+## � 环境要求
+
+由于本插件基于 Chrome Manifest V3 架构，并使用了 `chrome.storage.session` 等新特性，请确保浏览器版本满足以下要求：
+
+*   **Google Chrome**: v102 或更高版本 (推荐使用最新稳定版)
+*   **Microsoft Edge**: v102 或更高版本 (基于 Chromium 内核)
+
+> **注意**: 低于 v102 的版本将无法支持本插件的核心功能（如窗口状态持久化）。
+
+## � 安装指南
 
 ### 开发者模式安装
 由于本插件通常作为内部工具使用，建议通过源码安装：
@@ -266,6 +275,7 @@ if (!isAllowed(sender.tab.url)) {
 ## 📅 更新日志 (Changelog)
 
 ### v1.0.1 (2026-03-10)
+- **System**: 最低 Chrome 版本要求 v102+ (支持 `chrome.storage.session`)。
 - **Feature**: 新增窗口状态同步 (`onWindowStateChanged`)，实时感知窗口位置和大小变化。
 - **Feature**: 新增心跳检测与崩溃恢复机制 (`onWindowCrashed`)，自动清理无效窗口。
 - **Fix**: 修复 Service Worker 在闲置后状态丢失的问题，实现状态持久化和自动重连。
