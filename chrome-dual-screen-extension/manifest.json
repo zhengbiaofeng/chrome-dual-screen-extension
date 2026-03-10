@@ -5,9 +5,9 @@
   "minimum_chrome_version": "102",
   "description": "专为 Web 应用设计的双屏/多屏协作插件，支持跨屏窗口管理、状态同步与数据通信。",
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icons/icon.png",
+    "48": "icons/icon.png",
+    "128": "icons/icon.png"
   },
   "permissions": [
     "system.display",
@@ -32,9 +32,9 @@
     "default_popup": "popup/index.html",
     "default_title": "双屏设置 (Dual Screen Settings)",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
+      "16": "icons/icon.png",
+      "48": "icons/icon.png",
+      "128": "icons/icon.png"
     }
   }
 }

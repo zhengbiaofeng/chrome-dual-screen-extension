@@ -24,15 +24,11 @@
 由于本插件通常作为内部工具使用，建议通过源码安装：
 
 1.  下载本项目源码到本地。
-2.  **生成图标** (重要): 
-    *   打开 `chrome-dual-screen-extension/generate_icons.html` 文件。
-    *   点击页面上的三个“下载”按钮，生成图标文件。
-    *   将下载的 `icon16.png`, `icon48.png`, `icon128.png` 保存到 `chrome-dual-screen-extension/icons/` 目录下。
-3.  打开 Chrome 浏览器，在地址栏输入 `chrome://extensions/`。
-4.  开启右上角的 **"开发者模式" (Developer mode)** 开关。
-5.  点击左上角的 **"加载已解压的扩展程序" (Load unpacked)**。
-6.  选择 `chrome-dual-screen-extension` 文件夹即可（注意是包含 `manifest.json` 的那层目录）。
-7.  安装成功后，记下插件 ID（虽然 SDK 会自动处理，但在某些特定配置中可能需要）。
+2.  打开 Chrome 浏览器，在地址栏输入 `chrome://extensions/`。
+3.  开启右上角的 **"开发者模式" (Developer mode)** 开关。
+4.  点击左上角的 **"加载已解压的扩展程序" (Load unpacked)**。
+5.  选择 `chrome-dual-screen-extension` 文件夹即可（注意是包含 `manifest.json` 的那层目录）。
+6.  安装成功后，记下插件 ID（虽然 SDK 会自动处理，但在某些特定配置中可能需要）。
 
 ## 🛠️ 前端开发接入指南
 
