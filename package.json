@@ -1,0 +1,11 @@
+{
+  "name": "chrome-dual-screen-extension-test",
+  "version": "1.0.0",
+  "description": "Tests for Chrome Dual Screen Extension",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

@@ -10,19 +10,33 @@ window.addEventListener('message', (event) => {
   const data = event.data;
   
   // 只处理特定标识的消息
-  if (data && data.source === 'DUAL_SCREEN_SDK') {
-    // 转发给 Background
-    chrome.runtime.sendMessage(data, (response) => {
-      // 收到 Background 的响应（可能是异步操作的结果，或者是错误）
-      // 将响应回传给 Web 页面
-      window.postMessage({
-        source: 'DUAL_SCREEN_EXT',
-        action: 'RESPONSE', // 或者是对应请求的 action + '_RESPONSE'
-        reqId: data.reqId,
-        payload: response ? response.payload : null,
-        error: response ? response.error : chrome.runtime.lastError?.message
-      }, '*');
-    });
+    if (data && data.source === 'DUAL_SCREEN_SDK') {
+      // 转发给 Background
+    try {
+        chrome.runtime.sendMessage(data, (response) => {
+            if (chrome.runtime.lastError) {
+                 window.postMessage({
+                    source: 'DUAL_SCREEN_EXT',
+                    action: 'RESPONSE',
+                    reqId: data.reqId,
+                    error: chrome.runtime.lastError.message
+                 }, '*');
+                 return;
+            }
+
+            // 收到 Background 的响应（可能是异步操作的结果，或者是错误）
+            // 将响应回传给 Web 页面
+            window.postMessage({
+                source: 'DUAL_SCREEN_EXT',
+                action: 'RESPONSE', // 或者是对应请求的 action + '_RESPONSE'
+                reqId: data.reqId,
+                payload: response ? response.payload : null,
+                error: response ? response.error : null
+            }, '*');
+        });
+    } catch(e) {
+        console.error("Failed to send message", e);
+    }
   }
 });
 
