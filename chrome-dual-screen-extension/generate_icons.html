@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>生成插件图标</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            background-color: #f5f5f7;
+        }
+        h1 { color: #1d1d1f; }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .icons-row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 40px;
+            margin: 40px 0;
+        }
+        .icon-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        canvas {
+            border-radius: 20%; /* 圆角图标风格 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        button {
+            background-color: #0071e3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #0077ed; }
+        .instruction {
+            text-align: left;
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            margin-bottom: 20px;
+        }
+        code {
+            background: rgba(0,0,0,0.05);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>生成插件图标</h1>
+    
+    <div class="container">
+        <div class="instruction">
+            <strong>说明：</strong> 由于插件包中不能直接包含二进制图片，请按以下步骤操作：<br>
+            1. 点击下方的三个下载按钮，分别保存图片。<br>
+            2. 将下载的文件重命名并保存到 <code>chrome-dual-screen-extension/icons/</code> 目录下。<br>
+            3. 文件名必须分别为：<code>icon16.png</code>, <code>icon48.png</code>, <code>icon128.png</code>。
+        </div>
+
+        <div class="icons-row">
+            <div class="icon-item">
+                <canvas id="c128" width="128" height="128"></canvas>
+                <span>128x128</span>
+                <button onclick="download('c128', 'icon128.png')">下载 PNG</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="c48" width="48" height="48"></canvas>
+                <span>48x48</span>
+                <button onclick="download('c48', 'icon48.png')">下载 PNG</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="c16" width="16" height="16"></canvas>
+                <span>16x16</span>
+                <button onclick="download('c16', 'icon16.png')">下载 PNG</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function drawIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const w = size;
+            const h = size;
+
+            // 1. 背景 (蓝色渐变)
+            const gradient = ctx.createLinearGradient(0, 0, w, h);
+            gradient.addColorStop(0, '#4285f4');
+            gradient.addColorStop(1, '#3367d6');
+            ctx.fillStyle = gradient;
+            
+            // 绘制圆角矩形背景
+            ctx.beginPath();
+            const r = w * 0.2; // 圆角半径
+            ctx.moveTo(r, 0);
+            ctx.lineTo(w - r, 0);
+            ctx.quadraticCurveTo(w, 0, w, r);
+            ctx.lineTo(w, h - r);
+            ctx.quadraticCurveTo(w, h, w - r, h);
+            ctx.lineTo(r, h);
+            ctx.quadraticCurveTo(0, h, 0, h - r);
+            ctx.lineTo(0, r);
+            ctx.quadraticCurveTo(0, 0, r, 0);
+            ctx.fill();
+
+            // 2. 绘制屏幕内容
+            const padding = w * 0.15;
+            const screenW = (w - padding * 3) / 2;
+            const screenH = h * 0.5;
+            const startY = (h - screenH) / 2;
+
+            // 左屏 (主屏 - 实心白)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillRect(padding, startY, screenW, screenH);
+            
+            // 右屏 (副屏 - 半透明白)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillRect(padding * 2 + screenW, startY, screenW, screenH);
+
+            // 3. 连接线 (底部)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = Math.max(1, w * 0.06);
+            ctx.lineCap = 'round';
+            
+            const lineY = startY + screenH + (h * 0.08);
+            ctx.beginPath();
+            ctx.moveTo(padding + screenW / 2, lineY);
+            ctx.lineTo(padding * 2 + screenW + screenW / 2, lineY);
+            ctx.stroke();
+            
+            // 4. 小装饰：信号波 (右上角)
+            // 仅在 48 和 128 尺寸显示
+            if (size > 16) {
+                ctx.fillStyle = '#ffeb3b'; // 黄色点
+                const dotSize = w * 0.06;
+                ctx.beginPath();
+                ctx.arc(w - padding - dotSize, padding + dotSize, dotSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function download(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        window.onload = () => {
+            drawIcon('c128', 128);
+            drawIcon('c48', 48);
+            drawIcon('c16', 16);
+        };
+    </script>
+</body>
+</html>
