@@ -255,11 +255,14 @@ async function openWindow(payload) {
     const targetDisplay = displays.find(d => d.id === displayId) || displays[displayId]; // 支持索引或ID
 
     if (targetDisplay) {
-      // 如果没有指定具体的 left/top，则默认居中或左上角
-      createData.left = (left !== undefined) ? targetDisplay.bounds.left + left : targetDisplay.bounds.left;
-      createData.top = (top !== undefined) ? targetDisplay.bounds.top + top : targetDisplay.bounds.top;
+      // 关键修复：Chrome 在 Windows 下的坐标系统 bug
+      // 对于副屏（特别是当它位于主屏左侧时，坐标为负数），或者 DPI 缩放不同的屏幕
+      // 仅仅给一个 left: 0, top: 0 的相对坐标可能不够。我们需要给它一点偏移量确保它完全落在目标屏幕内
+      createData.left = targetDisplay.bounds.left + 50; // 加一点偏移，确保不和主屏边缘重合
+      createData.top = targetDisplay.bounds.top + 50;
       hasBounds = true;
       console.log(`[Dual Screen Linker] Target Display Found: ${targetDisplay.id}, Bounds:`, targetDisplay.bounds);
+      console.log(`[Dual Screen Linker] Set window creation coords: left=${createData.left}, top=${createData.top}`);
     } else {
       console.warn(`[Dual Screen Linker] Display ID ${displayId} not found!`);
     }
@@ -307,11 +310,13 @@ async function openWindow(payload) {
         if (finalState === 'fullscreen' || finalState === 'maximized') {
           setTimeout(async () => {
             try {
+              // 关键：不要使用 update state，使用 chrome API 特定的机制
+              // 有些系统上，连续的 update 会导致状态竞争
               await chrome.windows.update(newWindow.id, { state: finalState });
             } catch (e) {
                console.error('[Dual Screen Linker] Failed to update window state:', e);
             }
-          }, 150); // 给点时间让窗口在副屏完成 normal 状态的渲染
+          }, 300); // 增加延迟，给操作系统足够的时间完成窗口移动
         }
       } catch (e) {
         console.error('[Dual Screen Linker] Failed to force position:', e);
