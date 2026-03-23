@@ -271,7 +271,11 @@ async function openWindow(payload) {
   // 会直接抛出 "Invalid value for state" 错误。
   // 解决办法：创建时使用 normal，创建后如果需要再 update 为 fullscreen
   if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
-    createData.state = 'normal'; 
+    createData.state = 'normal';
+    // 关键修复：即使后续要全屏，创建时也必须给一个足够大的初始尺寸
+    // 否则 Windows/Chrome 可能会将其视为“异常窗口”强制吸附回主屏幕
+    createData.width = width || 800;
+    createData.height = height || 600;
   } else {
     createData.state = targetState;
   }
@@ -280,31 +284,14 @@ async function openWindow(payload) {
   
   // 如果刚才为了设置坐标降级为了 normal，现在将它更新为目标状态
   if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
-    // Chrome 有个 Bug：如果你创建窗口时不指定 width/height，它在另一个屏幕上创建出来时
-    // 可能还是会被系统偷偷拉回到主屏幕。
-    // 并且如果直接 setTimeout，在 Service Worker 环境下偶尔会失效。
-    // 我们尝试分两步更新：先强制移动，再全屏。
-    try {
-      // 第一步：先确保它在目标屏幕上有一个合适的尺寸和位置（避免被系统纠正）
-      await chrome.windows.update(newWindow.id, { 
-        left: createData.left, 
-        top: createData.top,
-        width: 800, // 给个默认尺寸，防止窗口太小被系统忽略位置
-        height: 600
-      });
-      
-      // 第二步：再将它全屏
-      // 稍微延迟一下，确保移动生效
-      setTimeout(async () => {
-        try {
-          await chrome.windows.update(newWindow.id, { state: targetState });
-        } catch (e) {
-          console.error('[Dual Screen Linker] Failed to update window state:', e);
-        }
-      }, 200);
-    } catch (e) {
-      console.error('[Dual Screen Linker] Failed to position window:', e);
-    }
+    // 稍微延迟一下，确保窗口已经在目标显示器上被系统接管
+    setTimeout(async () => {
+      try {
+        await chrome.windows.update(newWindow.id, { state: targetState });
+      } catch (e) {
+        console.error('[Dual Screen Linker] Failed to update window state:', e);
+      }
+    }, 200);
   }
   
   // 记录打开的窗口
