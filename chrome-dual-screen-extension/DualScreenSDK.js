@@ -114,6 +114,14 @@ class DualScreenSDK {
   }
 
   /**
+   * 获取当前窗口所在的显示器信息
+   * @returns {Promise<object>} 当前显示器对象
+   */
+  async getCurrentDisplay() {
+    return this._send('GET_CURRENT_DISPLAY');
+  }
+
+  /**
    * 在指定显示器打开新窗口
    * @param {string} url - 目标 URL
    * @param {object} options - 配置 { displayId: number/string, width: number, height: number, left: number, top: number, state: 'normal'|'fullscreen'|'maximized'|'minimized' }

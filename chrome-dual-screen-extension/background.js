@@ -165,6 +165,8 @@ async function handleMessage(message, sender) {
       return { success: false, error: 'Not a tab sender' };
     case 'GET_DISPLAYS':
       return await getDisplays();
+    case 'GET_CURRENT_DISPLAY':
+      return await getCurrentDisplay(sender);
     case 'OPEN_WINDOW':
       return await openWindow(message.payload);
     case 'CLOSE_WINDOW':
@@ -182,6 +184,29 @@ async function getDisplays() {
       resolve(displays);
     });
   });
+}
+
+async function getCurrentDisplay(sender) {
+  if (!sender || !sender.tab || !sender.tab.windowId) {
+    throw new Error('Cannot determine current window');
+  }
+  
+  const currentWindow = await chrome.windows.get(sender.tab.windowId);
+  const displays = await getDisplays();
+  
+  // 查找包含当前窗口中心的显示器
+  const winCenterX = currentWindow.left + (currentWindow.width / 2);
+  const winCenterY = currentWindow.top + (currentWindow.height / 2);
+  
+  const currentDisplay = displays.find(d => {
+    return winCenterX >= d.bounds.left && 
+           winCenterX <= (d.bounds.left + d.bounds.width) &&
+           winCenterY >= d.bounds.top && 
+           winCenterY <= (d.bounds.top + d.bounds.height);
+  });
+  
+  // 如果找不到（理论上不可能），返回主显示器（第一个）
+  return currentDisplay || displays[0];
 }
 
 async function openWindow(payload) {
