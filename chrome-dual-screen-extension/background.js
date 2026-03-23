@@ -209,7 +209,13 @@ async function openWindow(payload) {
   };
 
   if (state) {
-    createData.state = state; // 'normal', 'minimized', 'maximized', 'fullscreen'
+    // 确保 state 值合法，防止报错
+    const validStates = ['normal', 'minimized', 'maximized', 'fullscreen'];
+    if (validStates.includes(state)) {
+      createData.state = state;
+    } else {
+      console.warn(`[Dual Screen Linker] Invalid state provided: "${state}". Falling back to default.`);
+    }
   }
 
   if (width) createData.width = width;
