@@ -280,7 +280,15 @@ async function openWindow(payload) {
   
   // 如果刚才为了设置坐标降级为了 normal，现在将它更新为目标状态
   if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
-    await chrome.windows.update(newWindow.id, { state: targetState });
+    // 延迟一点点时间再全屏，确保窗口已经在目标显示器上渲染出来
+    // 否则如果太快 update，Chrome 可能会把它拉回到当前的主屏幕去全屏
+    setTimeout(async () => {
+      try {
+        await chrome.windows.update(newWindow.id, { state: targetState });
+      } catch (e) {
+        console.error('[Dual Screen Linker] Failed to update window state:', e);
+      }
+    }, 150);
   }
   
   // 记录打开的窗口
