@@ -295,7 +295,8 @@ async function openWindow(payload) {
 
   // 如果指定了坐标，执行强制恢复并定位策略
   if (hasBounds) {
-    // 等待窗口在系统后台注册完成
+    // 缩短第一步等待时间：只要创建命令发出去，Chrome 内部其实很快就会响应
+    // 我们只需要微小的延迟来确保内部 ID 已经就绪
     setTimeout(async () => {
       try {
         // 第一步：强制重新应用位置和尺寸
@@ -308,20 +309,19 @@ async function openWindow(payload) {
         
         // 第二步：如果用户确实需要全屏或最大化，再执行
         if (finalState === 'fullscreen' || finalState === 'maximized') {
+          // 大幅缩短全屏延迟：一旦位置设定好，马上触发全屏
           setTimeout(async () => {
             try {
-              // 关键：不要使用 update state，使用 chrome API 特定的机制
-              // 有些系统上，连续的 update 会导致状态竞争
               await chrome.windows.update(newWindow.id, { state: finalState });
             } catch (e) {
                console.error('[Dual Screen Linker] Failed to update window state:', e);
             }
-          }, 300); // 增加延迟，给操作系统足够的时间完成窗口移动
+          }, 50); // 从 300ms 缩短到 50ms，肉眼几乎感觉不到停顿
         }
       } catch (e) {
         console.error('[Dual Screen Linker] Failed to force position:', e);
       }
-    }, 200);
+    }, 50); // 从 200ms 缩短到 50ms，加速整个流程
   }
 
   return { windowId: newWindow.id, tabId: newWindow.tabs[0].id };
