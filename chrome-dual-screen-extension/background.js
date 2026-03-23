@@ -270,11 +270,16 @@ async function openWindow(payload) {
     hasBounds = true;
   }
 
-  // 终极防吸附策略：先以 minimized (最小化) 状态创建窗口！
-  // 这样可以完全绕过 Windows/Chrome 在窗口出生时的自动多屏位置分配逻辑。
+  // 终极防吸附策略：
+  // 我们不能在创建时使用 minimized，因为 Chrome 限制某些组合
+  // 也不能直接带 left/top 且 state: fullscreen
   let finalState = targetState;
+  
   if (hasBounds) {
-    createData.state = 'minimized';
+    // 关键：在目标显示器创建一个正常的窗口
+    createData.state = 'normal';
+    createData.width = width || 800;
+    createData.height = height || 600;
   } else {
     createData.state = targetState;
   }
@@ -290,14 +295,12 @@ async function openWindow(payload) {
     // 等待窗口在系统后台注册完成
     setTimeout(async () => {
       try {
-        // 第一步：从最小化状态恢复为 normal，并同时强制指定目标副屏的坐标和尺寸
-        // 这相当于一次“定向复活”，系统只能乖乖把它画在你指定的坐标上
+        // 第一步：强制重新应用位置和尺寸
         await chrome.windows.update(newWindow.id, {
-          state: 'normal',
           left: createData.left,
           top: createData.top,
-          width: width || 800,
-          height: height || 600
+          width: createData.width,
+          height: createData.height
         });
         
         // 第二步：如果用户确实需要全屏或最大化，再执行
