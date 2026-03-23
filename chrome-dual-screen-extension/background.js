@@ -282,21 +282,35 @@ async function openWindow(payload) {
 
   const newWindow = await chrome.windows.create(createData);
   
-  // 如果刚才为了设置坐标降级为了 normal，现在将它更新为目标状态
-  if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
-    // 稍微延迟一下，确保窗口已经在目标显示器上被系统接管
-    setTimeout(async () => {
-      try {
-        await chrome.windows.update(newWindow.id, { state: targetState });
-      } catch (e) {
-        console.error('[Dual Screen Linker] Failed to update window state:', e);
-      }
-    }, 200);
-  }
-  
   // 记录打开的窗口
   activeWindows.set(url, newWindow.id);
   saveActiveWindows();
+
+  // 如果刚才为了设置坐标降级为了 normal，现在将它更新为目标状态
+  if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
+    // 监听窗口创建完成事件，或者直接使用稍微长一点的延迟
+    // 因为在某些系统中，200ms 不足以让窗口完全渲染并脱离主屏吸附
+    setTimeout(async () => {
+      try {
+        // 在全屏之前，再次强制更新一次位置，确保它真的在那个屏幕上
+        await chrome.windows.update(newWindow.id, {
+          left: createData.left,
+          top: createData.top
+        });
+        
+        // 再全屏
+        setTimeout(async () => {
+          try {
+            await chrome.windows.update(newWindow.id, { state: targetState });
+          } catch (e) {
+             console.error('[Dual Screen Linker] Failed to update window state:', e);
+          }
+        }, 50);
+      } catch (e) {
+        console.error('[Dual Screen Linker] Failed to force position:', e);
+      }
+    }, 300); // 增加初始延迟到 300ms
+  }
 
   return { windowId: newWindow.id, tabId: newWindow.tabs[0].id };
 }

@@ -4,7 +4,7 @@
 
 ## 🔄 更新日志 / Changelog
 
-* **[2024-03-23]**: 彻底修复 `openWindow` 时因同时指定 `displayId` (坐标) 和 `state: 'fullscreen'` 导致的 Chrome API 底层报错 `Invalid value for state` 的问题。最终采用在 `chrome.windows.create` 时传入副屏坐标并**强制附带合理的初始尺寸 (width/height)** 的方式，成功防止了 Windows/Chrome 系统将无尺寸窗口吸附回主屏的 Bug，最后再通过延迟更新实现完美的副屏全屏。
+* **[2024-03-23]**: 彻底修复跨屏全屏被主屏幕强制吸附的问题。采用“副屏坐标+默认尺寸创建 -> 延迟 300ms -> 强制重申副屏坐标 -> 延迟 50ms -> 触发全屏”的多重防吸附策略，全面适配 Windows 底层多显示器窗口管理逻辑。
 * **[2024-03-23]**: 新增 `getCurrentDisplay()` API，允许前端动态获取当前窗口所在的屏幕，从而实现“始终在另一个屏幕打开”的智能逻辑。
 * **[2024-03-23]**: 增强了对 `openWindow` API 中 `state` 参数的校验，防止传入非法状态（如拼写错误）导致插件报错崩溃，非法状态将自动回退为默认正常窗口。
 * **[2024-03-23]**: 修复了 `DualScreenSDK.js` 在现代前端框架 (如 Vue/Vite) 中以 ES Module 方式引入时报 `does not provide an export named 'default'` 的错误，添加了 `export default` 语法支持。
