@@ -183,6 +183,8 @@ class DualScreenSDK {
 // 导出 (适配 CommonJS 和 ES Module)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = DualScreenSDK;
-} else {
+} else if (typeof window !== 'undefined') {
   window.DualScreenSDK = DualScreenSDK;
 }
+
+export default DualScreenSDK;
