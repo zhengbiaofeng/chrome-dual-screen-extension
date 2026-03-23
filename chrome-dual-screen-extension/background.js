@@ -259,6 +259,9 @@ async function openWindow(payload) {
       createData.left = (left !== undefined) ? targetDisplay.bounds.left + left : targetDisplay.bounds.left;
       createData.top = (top !== undefined) ? targetDisplay.bounds.top + top : targetDisplay.bounds.top;
       hasBounds = true;
+      console.log(`[Dual Screen Linker] Target Display Found: ${targetDisplay.id}, Bounds:`, targetDisplay.bounds);
+    } else {
+      console.warn(`[Dual Screen Linker] Display ID ${displayId} not found!`);
     }
   } else if (left !== undefined && top !== undefined) {
     // 直接使用绝对坐标
@@ -267,15 +270,11 @@ async function openWindow(payload) {
     hasBounds = true;
   }
 
-  // Chrome API 限制：如果同时指定了 left/top (bounds) 且 state 为 fullscreen/maximized，
-  // 会直接抛出 "Invalid value for state" 错误。
-  // 解决办法：创建时使用 normal，创建后如果需要再 update 为 fullscreen
-  if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
-    createData.state = 'normal';
-    // 关键修复：即使后续要全屏，创建时也必须给一个足够大的初始尺寸
-    // 否则 Windows/Chrome 可能会将其视为“异常窗口”强制吸附回主屏幕
-    createData.width = width || 800;
-    createData.height = height || 600;
+  // 终极防吸附策略：先以 minimized (最小化) 状态创建窗口！
+  // 这样可以完全绕过 Windows/Chrome 在窗口出生时的自动多屏位置分配逻辑。
+  let finalState = targetState;
+  if (hasBounds) {
+    createData.state = 'minimized';
   } else {
     createData.state = targetState;
   }
@@ -286,30 +285,35 @@ async function openWindow(payload) {
   activeWindows.set(url, newWindow.id);
   saveActiveWindows();
 
-  // 如果刚才为了设置坐标降级为了 normal，现在将它更新为目标状态
-  if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
-    // 监听窗口创建完成事件，或者直接使用稍微长一点的延迟
-    // 因为在某些系统中，200ms 不足以让窗口完全渲染并脱离主屏吸附
+  // 如果指定了坐标，执行强制恢复并定位策略
+  if (hasBounds) {
+    // 等待窗口在系统后台注册完成
     setTimeout(async () => {
       try {
-        // 在全屏之前，再次强制更新一次位置，确保它真的在那个屏幕上
+        // 第一步：从最小化状态恢复为 normal，并同时强制指定目标副屏的坐标和尺寸
+        // 这相当于一次“定向复活”，系统只能乖乖把它画在你指定的坐标上
         await chrome.windows.update(newWindow.id, {
+          state: 'normal',
           left: createData.left,
-          top: createData.top
+          top: createData.top,
+          width: width || 800,
+          height: height || 600
         });
         
-        // 再全屏
-        setTimeout(async () => {
-          try {
-            await chrome.windows.update(newWindow.id, { state: targetState });
-          } catch (e) {
-             console.error('[Dual Screen Linker] Failed to update window state:', e);
-          }
-        }, 50);
+        // 第二步：如果用户确实需要全屏或最大化，再执行
+        if (finalState === 'fullscreen' || finalState === 'maximized') {
+          setTimeout(async () => {
+            try {
+              await chrome.windows.update(newWindow.id, { state: finalState });
+            } catch (e) {
+               console.error('[Dual Screen Linker] Failed to update window state:', e);
+            }
+          }, 150); // 给点时间让窗口在副屏完成 normal 状态的渲染
+        }
       } catch (e) {
         console.error('[Dual Screen Linker] Failed to force position:', e);
       }
-    }, 300); // 增加初始延迟到 300ms
+    }, 200);
   }
 
   return { windowId: newWindow.id, tabId: newWindow.tabs[0].id };
