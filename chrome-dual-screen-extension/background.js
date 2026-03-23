@@ -233,11 +233,12 @@ async function openWindow(payload) {
     type: type || 'popup', // 'popup' 只有标题栏，更像应用窗口；'normal' 有地址栏
   };
 
+  // 保存期望的最终状态
+  let targetState = 'normal';
   if (state) {
-    // 确保 state 值合法，防止报错
     const validStates = ['normal', 'minimized', 'maximized', 'fullscreen'];
     if (validStates.includes(state)) {
-      createData.state = state;
+      targetState = state;
     } else {
       console.warn(`[Dual Screen Linker] Invalid state provided: "${state}". Falling back to default.`);
     }
@@ -247,6 +248,7 @@ async function openWindow(payload) {
   if (height) createData.height = height;
 
   // 如果指定了 displayId，尝试找到该显示器并设置坐标
+  let hasBounds = false;
   if (displayId !== undefined) {
     const displays = await getDisplays();
     // 尝试匹配 id，注意 display.id 可能是 string
@@ -256,14 +258,30 @@ async function openWindow(payload) {
       // 如果没有指定具体的 left/top，则默认居中或左上角
       createData.left = (left !== undefined) ? targetDisplay.bounds.left + left : targetDisplay.bounds.left;
       createData.top = (top !== undefined) ? targetDisplay.bounds.top + top : targetDisplay.bounds.top;
+      hasBounds = true;
     }
   } else if (left !== undefined && top !== undefined) {
     // 直接使用绝对坐标
     createData.left = left;
     createData.top = top;
+    hasBounds = true;
+  }
+
+  // Chrome API 限制：如果同时指定了 left/top (bounds) 且 state 为 fullscreen/maximized，
+  // 会直接抛出 "Invalid value for state" 错误。
+  // 解决办法：创建时使用 normal，创建后如果需要再 update 为 fullscreen
+  if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
+    createData.state = 'normal'; 
+  } else {
+    createData.state = targetState;
   }
 
   const newWindow = await chrome.windows.create(createData);
+  
+  // 如果刚才为了设置坐标降级为了 normal，现在将它更新为目标状态
+  if (hasBounds && (targetState === 'fullscreen' || targetState === 'maximized')) {
+    await chrome.windows.update(newWindow.id, { state: targetState });
+  }
   
   // 记录打开的窗口
   activeWindows.set(url, newWindow.id);
