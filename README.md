@@ -7,6 +7,7 @@
 * **[2024-03-23]**: 彻底修复跨屏全屏被主屏幕强制吸附的问题。采用“先以 minimized (最小化) 状态创建 -> 延迟 200ms -> 恢复 normal 状态并强制指定副屏坐标与尺寸 -> 延迟 150ms -> 触发全屏”的终极防吸附策略，完全绕过 Windows/Chrome 在窗口出生时的自动多屏位置分配逻辑。
 * **[2024-03-23]**: 新增 `getCurrentDisplay()` API，允许前端动态获取当前窗口所在的屏幕，从而实现“始终在另一个屏幕打开”的智能逻辑。
 * **[2024-03-23]**: 增强了对 `openWindow` API 中 `state` 参数的校验，防止传入非法状态（如拼写错误）导致插件报错崩溃，非法状态将自动回退为默认正常窗口。
+* **[2024-03-23]**: 修复了前端使用 `getCurrentDisplay` 时忘记使用 `await` 导致返回 Promise 对象从而引起判断逻辑失效的问题。在 README 中补充了明确的 `await` 调用示例。
 * **[2024-03-23]**: 修复了 `DualScreenSDK.js` 在现代前端框架 (如 Vue/Vite) 中以 ES Module 方式引入时报 `does not provide an export named 'default'` 的错误，添加了 `export default` 语法支持。
 * **[2024-03-23]**: 优化项目配置，将 Playwright 测试产生的缓存目录 (`playwright-report/`, `test-results/`) 加入 `.gitignore`，防止污染 Git 提交记录。
 
