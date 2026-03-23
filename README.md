@@ -4,6 +4,7 @@
 
 ## 🔄 更新日志 / Changelog
 
+* **[2024-03-23]**: 增强了对 `openWindow` API 中 `state` 参数的校验，防止传入非法状态（如拼写错误）导致插件报错崩溃，非法状态将自动回退为默认正常窗口。
 * **[2024-03-23]**: 修复了 `DualScreenSDK.js` 在现代前端框架 (如 Vue/Vite) 中以 ES Module 方式引入时报 `does not provide an export named 'default'` 的错误，添加了 `export default` 语法支持。
 * **[2024-03-23]**: 优化项目配置，将 Playwright 测试产生的缓存目录 (`playwright-report/`, `test-results/`) 加入 `.gitignore`，防止污染 Git 提交记录。
 
