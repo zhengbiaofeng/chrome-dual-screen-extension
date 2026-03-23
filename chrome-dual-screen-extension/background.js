@@ -296,7 +296,7 @@ async function openWindow(payload) {
   // 如果指定了坐标，执行强制恢复并定位策略
   if (hasBounds) {
     // 缩短第一步等待时间：只要创建命令发出去，Chrome 内部其实很快就会响应
-    // 我们只需要微小的延迟来确保内部 ID 已经就绪
+    // 我们直接使用 0 延迟，利用事件循环的下一个 tick 执行
     setTimeout(async () => {
       try {
         // 第一步：强制重新应用位置和尺寸
@@ -316,12 +316,12 @@ async function openWindow(payload) {
             } catch (e) {
                console.error('[Dual Screen Linker] Failed to update window state:', e);
             }
-          }, 50); // 从 300ms 缩短到 50ms，肉眼几乎感觉不到停顿
+          }, 0); // 直接 0 延迟触发，无缝衔接
         }
       } catch (e) {
         console.error('[Dual Screen Linker] Failed to force position:', e);
       }
-    }, 50); // 从 200ms 缩短到 50ms，加速整个流程
+    }, 0); // 0 延迟，极致性能
   }
 
   return { windowId: newWindow.id, tabId: newWindow.tabs[0].id };
